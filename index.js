@@ -47,6 +47,15 @@ app.get("/", (req, res) => {
         endpoints: apiDocs
     });
 });
+
+app.get("/cekip", async (req, res) => {
+    try {
+        const response = await axios.get("https://api64.ipify.org?format=json");
+        res.json({ status: "success", ip: response.data.ip });
+    } catch (error) {
+        res.status(500).json({ status: "error", message: "Gagal mendapatkan IP", error: error.message });
+    }
+});
 // Endpoint untuk mengambil data dari API eksternal dengan userId dan zoneId dari query parameter
 app.get("/cekreg", async (req, res) => {
     const { userId, zoneId } = req.query; // Ambil userId & zoneId dari query parameter
