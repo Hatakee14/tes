@@ -42,7 +42,7 @@ app.get("/", (req, res) => {
     res.json({
         status: "success",
         message: "API Documentation",
-        base_url: `http://localhost:${port}`,
+        base_url: `${baseUrl}`,
         endpoints: apiDocs
     });
 });
