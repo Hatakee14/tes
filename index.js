@@ -31,11 +31,12 @@ const apiList = [
 
 // Endpoint Dokumentasi API
 app.get("/", (req, res) => {
+    const baseUrl = `${req.protocol}://${req.get("host")}`
     const apiDocs = apiList.map(api => ({
         method: api.method,
         path: api.path,
         description: api.description,
-        example: `http://localhost:${port}${api.path}`
+        example: `${baseUrl}${api.path}`
     }));
 
     res.json({
