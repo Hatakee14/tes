@@ -11,6 +11,8 @@
   "description": "",
   "dependencies": {
     "@slrmyapi/mlreg": "^2.0.6",
+    "@adiwajshing/keyed-db": "^0.2.4",
+    "@whiskeysockets/baileys": "^6.4.0",
     "axios": "^1.8.3",
     "cors": "^2.8.5",
     "express": "^4.21.2",
