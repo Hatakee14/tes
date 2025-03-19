@@ -1,7 +1,6 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
-const { default: makeWASocket, DisconnectReason, makeInMemoryStore, jidDecode, proto, getContentType, useMultiFileAuthState, downloadContentFromMessage } = require("@whiskeysockets/baileys")
 
 
 const app = express();
@@ -29,90 +28,11 @@ const apiList = [
         description: "Download video TikTok tanpa watermark berdasarkan URL."
     }
 ];
-let bot;
-let qrCodeData = "";
 
-// 🔹 Inisialisasi bot WhatsApp
-async function startBotz() {
-    const { state, saveCreds } = await useMultiFileAuthState("session");
-
-    bot = makeWASocket({
-        logger: pino({ level: "silent" }),
-        printQRInTerminal: false,
-        auth: state,
-        connectTimeoutMs: 60000,
-        defaultQueryTimeoutMs: 0,
-        keepAliveIntervalMs: 10000,
-        emitOwnEvents: true,
-        fireInitQueries: true,
-        generateHighQualityLinkPreview: true,
-        syncFullHistory: true,
-        markOnlineOnConnect: true,
-        browser: ["Ubuntu", "Chrome", "20.0.04"],
-    });
-
-    bot.ev.on("creds.update", saveCreds);
-
-    bot.ev.on("qr", async (qr) => {
-        qrCodeData = await qrcode.toDataURL(qr);
-        console.log("Scan QR Code untuk login!");
-    });
-
-    bot.ev.on("connection.update", (update) => {
-        const { connection } = update;
-        if (connection === "close") {
-            console.log("Bot terputus, mencoba menyambungkan ulang...");
-            startBotz(); // Restart bot jika terputus
-        } else if (connection === "open") {
-            console.log("Bot WhatsApp siap!");
-            qrCodeData = ""; // Hapus QR Code setelah login
-        }
-    });
-
-    bot.ev.on("messages.upsert", async (chatUpdate) => {
-        try {
-            let m = chatUpdate.messages[0];
-            if (!m.message) return;
-            m.message = m.message.ephemeralMessage?.message || m.message;
-            if (m.key.remoteJid === "status@broadcast") return;
-        } catch (err) {
-            console.log("Error pada pesan:", err);
-        }
-    });
-}
-
-startBotz();
-
-// 🔹 Endpoint untuk menampilkan QR Code di halaman scan
-app.get("/scan", (req, res) => {
-    if (qrCodeData) {
-        res.send(`<img src="${qrCodeData}" alt="Scan QR Code untuk login" />`);
-    } else {
-        res.send("Bot sudah login, tidak perlu scan lagi.");
-    }
-});
-
-// 🔹 Endpoint untuk mengirim pesan WhatsApp
-app.post("/send", async (req, res) => {
-    const { number, message } = req.body;
-
-    if (!number || !message) {
-        return res.status(400).json({ status: "error", message: "Nomor dan pesan wajib diisi!" });
-    }
-
-    try {
-        const formattedNumber = number.includes("@s.whatsapp.net") ? number : number + "@s.whatsapp.net";
-        await bot.sendMessage(formattedNumber, { text: message });
-
-        res.json({ status: "success", message: "Pesan berhasil dikirim!" });
-    } catch (error) {
-        res.status(500).json({ status: "error", message: "Gagal mengirim pesan", error: error.message });
-    }
-});
 
 // Endpoint Dokumentasi API
 app.get("/", (req, res) => {
-    const baseUrl = `${req.protocol}://${req.get("host")}`
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
     const apiDocs = apiList.map(api => ({
         method: api.method,
         path: api.path,
