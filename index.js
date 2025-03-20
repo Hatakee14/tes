@@ -8,6 +8,8 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+// Gunakan public folder untuk file statis
+app.use(express.static("public"));
 
 
 
@@ -59,6 +61,7 @@ app.get("/", (req, res) => {
     });
 });
 
+// Route untuk menampilkan index.html saat mengakses `/tes`
 app.get("/tes", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
