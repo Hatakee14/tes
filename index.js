@@ -11,7 +11,7 @@ app.use(express.json());
 
 // Rate limiter (50 request per 2 menit)
 const limiter = rateLimit({
-    windowMs: 2 * 60 * 1000, // 2 menit
+    windowMs:  60 * 1000, // 2 menit
     max: 50,
     message: { status: "error", message: "Terlalu banyak permintaan, coba lagi nanti." }
 });
@@ -49,8 +49,7 @@ app.get("/", (req, res) => {
         endpoints: [
             { path: "/cekreg", method: "GET", description: "Cek registrasi akun ML berdasarkan userId dan zoneId." },
             { path: "/cekml", method: "GET", description: "Cek nickname Mobile Legends berdasarkan userId dan zoneId." },
-            { path: "/dl", method: "GET", description: "Download video TikTok tanpa watermark berdasarkan URL." },
-            { path: "/cekhit", method: "GET", description: "Melihat jumlah hit API." }
+            { path: "/dl", method: "GET", description: "Download video TikTok tanpa watermark berdasarkan URL." }
         ]
     });
 });
