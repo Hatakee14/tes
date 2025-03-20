@@ -5,7 +5,7 @@ const rateLimit = require("express-rate-limit");
 
 const app = express();
 const port = process.env.PORT || 3000;
-
+ const baseUrl = `${req.protocol}://${req.get("host")}`;
 app.use(cors());
 app.use(express.json());
 
@@ -41,15 +41,54 @@ app.use((req, res, next) => {
     next();
 });
 
-// Endpoint Dokumentasi API
+
 app.get("/", (req, res) => {
+    res.json({
+        status: "success",
+        message: "Profile API",
+        dev_info: {
+            creator: "Nafi Maulana",
+            info: "Selamat datang di REST API sederhana saya. Gunakan sesuai kebutuhan Anda.",
+            list: `${baseUrl}/list`
+        }
+    });
+});
+
+// Endpoint Dokumentasi API
+app.get("/list", (req, res) => {
     res.json({
         status: "success",
         message: "API Documentation",
         endpoints: [
-            { path: "/cekreg", method: "GET", description: "Cek registrasi akun ML berdasarkan userId dan zoneId." },
-            { path: "/cekml", method: "GET", description: "Cek nickname Mobile Legends berdasarkan userId dan zoneId." },
-            { path: "/dl", method: "GET", description: "Download video TikTok tanpa watermark berdasarkan URL." }
+            {
+                path: "/cekreg",
+                method: "GET",
+                description: "Cek registrasi akun ML berdasarkan userId dan zoneId.",
+                params: [
+                    { name: "userId", type: "string", required: true, description: "ID pengguna Mobile Legends." },
+                    { name: "zoneId", type: "string", required: true, description: "Zone ID Mobile Legends." }
+                ],
+                example: `${baseUrl}/cekreg?userId=123456&zoneId=7890`
+            },
+            {
+                path: "/cekml",
+                method: "GET",
+                description: "Cek nickname Mobile Legends berdasarkan userId dan zoneId.",
+                params: [
+                    { name: "userId", type: "string", required: true, description: "ID pengguna Mobile Legends." },
+                    { name: "zoneId", type: "string", required: true, description: "Zone ID Mobile Legends." }
+                ],
+                example: `${baseUrl}/cekml?userId=123456&zoneId=7890`
+            },
+            {
+                path: "/dl",
+                method: "GET",
+                description: "Download video TikTok tanpa watermark berdasarkan URL.",
+                params: [
+                    { name: "url", type: "string", required: true, description: "URL video TikTok." }
+                ],
+                example: `${baseUrl}/dl?url=https://www.tiktok.com/@username/video/123456789`
+            }
         ]
     });
 });
