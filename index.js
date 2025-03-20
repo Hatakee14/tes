@@ -5,13 +5,13 @@ const rateLimit = require("express-rate-limit");
 
 const app = express();
 const port = process.env.PORT || 3000;
- const baseUrl = `${req.protocol}://${req.get("host")}`;
+
 app.use(cors());
 app.use(express.json());
 
 // Rate limiter (50 request per 2 menit)
 const limiter = rateLimit({
-    windowMs:  60 * 1000, // 2 menit
+    windowMs: 2 * 60 * 1000, // 2 menit
     max: 50,
     message: { status: "error", message: "Terlalu banyak permintaan, coba lagi nanti." }
 });
@@ -26,7 +26,7 @@ let hitLogs = [];
 app.use((req, res, next) => {
     hitCount++;
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-    
+
     // Simpan log ke array
     hitLogs.push({
         timestamp: new Date().toISOString(),
@@ -41,8 +41,10 @@ app.use((req, res, next) => {
     next();
 });
 
-
+// Endpoint Utama
 app.get("/", (req, res) => {
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
     res.json({
         status: "success",
         message: "Profile API",
@@ -56,6 +58,8 @@ app.get("/", (req, res) => {
 
 // Endpoint Dokumentasi API
 app.get("/list", (req, res) => {
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
     res.json({
         status: "success",
         message: "API Documentation",
@@ -106,26 +110,26 @@ app.get("/cekhit", (req, res) => {
 // Endpoint cek registrasi ML
 app.get("/cekreg", async (req, res) => {
     const { userId, zoneId } = req.query;
-    if (!userId || !zoneId) return res.status(400).json({ message: "userId dan zoneId wajib diisi" });
+    if (!userId || !zoneId) return res.status(400).json({ status: "error", message: "userId dan zoneId wajib diisi" });
 
     try {
         const response = await axios.get(`https://slrmyshop.us/tools/mlreg.php?userId=${encodeURIComponent(userId)}&zoneId=${encodeURIComponent(zoneId)}`);
         res.json({ status: "success", data: response.data.mlbb_data });
     } catch (error) {
-        res.status(500).json({ message: "Gagal mengambil data", error: error.message });
+        res.status(500).json({ status: "error", message: "Gagal mengambil data", error: error.message });
     }
 });
 
 // Endpoint cek nickname ML
 app.get("/cekml", async (req, res) => {
     const { userId, zoneId } = req.query;
-    if (!userId || !zoneId) return res.status(400).json({ message: "userId dan zoneId wajib diisi" });
+    if (!userId || !zoneId) return res.status(400).json({ status: "error", message: "userId dan zoneId wajib diisi" });
 
     try {
         const response = await axios.get(`https://api.gamestoreindonesia.com/v1/order/prepare/MOBILE_LEGENDS?userId=${encodeURIComponent(userId)}&zoneId=${encodeURIComponent(zoneId)}`);
         res.json({ status: "success", data: { nickname: response.data.data } });
     } catch (error) {
-        res.status(500).json({ message: "Gagal mengambil data", error: error.message });
+        res.status(500).json({ status: "error", message: "Gagal mengambil data", error: error.message });
     }
 });
 
