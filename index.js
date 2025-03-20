@@ -8,7 +8,7 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public")); // ⬅️ Sajikan file statis dari folder public
+
 
 
 // Rate limiter (50 request per 1 menit)
@@ -53,9 +53,14 @@ app.get("/", (req, res) => {
         dev_info: {
             creator: "Nafi Maulana",
             info: "Selamat datang di REST API sederhana saya. Gunakan sesuai kebutuhan Anda.",
-            list: `${baseUrl}/list`
+            list: `${baseUrl}/list`,
+            testing: `${baseUrl}/tes`
         }
     });
+});
+
+app.get("/tes", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Endpoint Dokumentasi API
