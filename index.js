@@ -2,57 +2,42 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
-const fs = require("fs");
-const http = require("http");
-const { Server } = require("socket.io");
 
 const app = express();
-const server = http.createServer(app); // Gunakan HTTP server untuk Socket.IO
-const io = new Server(server, { cors: { origin: "*" } });
-
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
 // Rate limiter (50 request per 2 menit)
 const limiter = rateLimit({
-    windowMs: 2 * 60 * 1000,
+    windowMs: 2 * 60 * 1000, // 2 menit
     max: 50,
     message: { status: "error", message: "Terlalu banyak permintaan, coba lagi nanti." }
 });
 
-// Gunakan limiter untuk semua request
 app.use(limiter);
 
-// Menyimpan jumlah hit API
+// Menyimpan jumlah hit API dan log dalam array
 let hitCount = 0;
+let hitLogs = [];
 
-// Fungsi untuk mencatat hit ke file hit.json
-const logHit = (ip) => {
-    const logData = { timestamp: new Date().toISOString(), ip };
-
-    // Baca file hit.json (jika ada), jika tidak buat array kosong
-    let hitLogs = [];
-    if (fs.existsSync("hit.json")) {
-        hitLogs = JSON.parse(fs.readFileSync("hit.json"));
-    }
-
-    // Tambahkan data baru ke dalam array
-    hitLogs.push(logData);
-
-    // Simpan kembali ke hit.json
-    fs.writeFileSync("hit.json", JSON.stringify(hitLogs, null, 2));
-};
-
-// Middleware untuk menghitung hit
+// Middleware untuk mencatat hit
 app.use((req, res, next) => {
     hitCount++;
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
     
-    logHit(ip); // Simpan hit ke file
-    io.emit("updateHit", { hitCount, logs: JSON.parse(fs.readFileSync("hit.json")) }); // Kirim update ke semua client
-    
+    // Simpan log ke array
+    hitLogs.push({
+        timestamp: new Date().toISOString(),
+        ip
+    });
+
+    // Batasi jumlah log agar tidak terlalu besar (misalnya, simpan hanya 100 log terakhir)
+    if (hitLogs.length > 100) {
+        hitLogs.shift();
+    }
+
     next();
 });
 
@@ -70,14 +55,14 @@ app.get("/", (req, res) => {
     });
 });
 
-// Endpoint cek jumlah hit API dan lognya
+// Endpoint cek jumlah hit API
 app.get("/cekhit", (req, res) => {
-    let hitLogs = [];
-    if (fs.existsSync("hit.json")) {
-        hitLogs = JSON.parse(fs.readFileSync("hit.json"));
-    }
-
-    res.json({ status: "success", message: "Jumlah hit API", hit_count: hitCount, logs: hitLogs });
+    res.json({
+        status: "success",
+        message: "Jumlah hit API",
+        hit_count: hitCount,
+        logs: hitLogs.slice(-10) // Tampilkan hanya 10 log terakhir
+    });
 });
 
 // Endpoint cek registrasi ML
@@ -130,17 +115,7 @@ app.get("/dl", async (req, res) => {
     }
 });
 
-// Hubungkan socket.io
-io.on("connection", (socket) => {
-    console.log("Client terhubung:", socket.id);
-    socket.emit("updateHit", { hitCount, logs: JSON.parse(fs.readFileSync("hit.json")) });
-
-    socket.on("disconnect", () => {
-        console.log("Client terputus:", socket.id);
-    });
-});
-
 // Jalankan server
-server.listen(port, () => {
-    console.log(`Server berjalan di http://localhost:${port}`);
+app.listen(port, () => {
+    console.log(`Server berjalan di port ${port}`);
 });
