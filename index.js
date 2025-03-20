@@ -8,10 +8,12 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static("public")); // ⬅️ Sajikan file statis dari folder public
 
-// Rate limiter (50 request per 2 menit)
+
+// Rate limiter (50 request per 1 menit)
 const limiter = rateLimit({
-    windowMs: 2 * 60 * 1000, // 2 menit
+    windowMs: 60 * 1000, // 1 menit
     max: 50,
     message: { status: "error", message: "Terlalu banyak permintaan, coba lagi nanti." }
 });
